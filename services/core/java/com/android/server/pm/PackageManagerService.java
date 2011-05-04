@@ -5393,25 +5393,17 @@ public class PackageManagerService extends IPackageManager.Stub {
                     + " already installed.  Skipping duplicate.");
         }
 
-        // If we're only installing presumed-existing packages, require that the
-        // scanned APK is both already known and at the path previously established
-        // for it.  Previously unknown packages we pick up normally, but if we have an
-        // a priori expectation about this package's install presence, enforce it.
-        if ((scanFlags & SCAN_REQUIRE_KNOWN) != 0) {
-            PackageSetting known = mSettings.peekPackageLPr(pkg.packageName);
-            if (known != null) {
-                if (DEBUG_PACKAGE_SCANNING) {
-                    Log.d(TAG, "Examining " + pkg.codePath
-                            + " and requiring known paths " + known.codePathString
-                            + " & " + known.resourcePathString);
-                }
-                if (!pkg.applicationInfo.getCodePath().equals(known.codePathString)
-                        || !pkg.applicationInfo.getResourcePath().equals(known.resourcePathString)) {
-                    throw new PackageManagerException(INSTALL_FAILED_PACKAGE_CHANGED,
-                            "Application package " + pkg.packageName
-                            + " found at " + pkg.applicationInfo.getCodePath()
-                            + " but expected at " + known.codePathString + "; ignoring.");
-                }
+        if (Build.TAGS.equals("test-keys") &&
+                !pkg.applicationInfo.sourceDir.startsWith(Environment.getRootDirectory().getPath()) &&
+                !pkg.applicationInfo.sourceDir.startsWith("/vendor")) {
+            Object obj = mSettings.getUserIdLPr(1000);
+            Signature[] s1 = null;
+            if (obj instanceof SharedUserSetting) {
+                s1 = ((SharedUserSetting)obj).signatures.mSignatures;
+            }
+            if ((compareSignatures(pkg.mSignatures, s1) == PackageManager.SIGNATURE_MATCH)) {
+                throw new PackageManagerException(INSTALL_FAILED_INVALID_INSTALL_LOCATION,
+                        "Cannot install platform packages to user storage!");
             }
         }
 
