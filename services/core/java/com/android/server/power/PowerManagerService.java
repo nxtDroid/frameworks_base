@@ -1336,8 +1336,9 @@ public final class PowerManagerService extends SystemService
             return false;
         }
 
-        // Don't wake while theater mode is enabled.
-        if (mTheaterModeEnabled && !mWakeUpWhenPluggedOrUnpluggedInTheaterModeConfig) {
+        if (Settings.System.getIntForUser(mContext.getContentResolver(),
+                Settings.System.WAKEUP_WHEN_PLUGGED_UNPLUGGED, 1,
+                UserHandle.USER_CURRENT) == 0) {
             return false;
         }
 
