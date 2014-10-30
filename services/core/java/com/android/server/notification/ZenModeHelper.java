@@ -306,16 +306,17 @@ public class ZenModeHelper implements AudioManagerInternal.RingerModeDelegate {
         return true;
     }
 
-    private void applyZenToRingerMode() {
-        if (mAudioManager == null) return;
-        // force the ringer mode into compliance
-        final int ringerModeInternal = mAudioManager.getRingerModeInternal();
-        int newRingerModeInternal = ringerModeInternal;
-        switch (mZenMode) {
-            case Global.ZEN_MODE_NO_INTERRUPTIONS:
-                if (ringerModeInternal != AudioManager.RINGER_MODE_SILENT) {
-                    mPreviousRingerMode = ringerModeInternal;
-                    newRingerModeInternal = AudioManager.RINGER_MODE_SILENT;
+    private void handleRingerModeChanged() {
+        if (mAudioManager != null) {
+            // follow ringer mode if necessary
+            final int ringerMode = mAudioManager.getRingerMode();
+            int newZen = -1;
+            if (ringerMode == AudioManager.RINGER_MODE_SILENT) {
+                if (mZenMode == Global.ZEN_MODE_OFF && !mContext.getResources().getBoolean(
+                        com.android.internal.R.bool.config_setZenModeWhenSilentModeOn)) {
+                    newZen = Global.ZEN_MODE_IMPORTANT_INTERRUPTIONS;
+                } else if (mZenMode != Global.ZEN_MODE_NO_INTERRUPTIONS) {
+                    newZen = Global.ZEN_MODE_NO_INTERRUPTIONS;
                 }
                 break;
             case Global.ZEN_MODE_IMPORTANT_INTERRUPTIONS:
