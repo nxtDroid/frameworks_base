@@ -733,7 +733,7 @@ public class MockPackageManager extends PackageManager {
      * @hide
      */
     @Override
-    public boolean isUpgrade() {
+    public void setComponentProtectedSetting(ComponentName componentName, boolean newState) {
         throw new UnsupportedOperationException();
     }
 

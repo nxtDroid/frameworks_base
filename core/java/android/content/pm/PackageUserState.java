@@ -34,8 +34,10 @@ public class PackageUserState {
 
     public String lastDisableAppCaller;
 
-    public ArraySet<String> disabledComponents;
-    public ArraySet<String> enabledComponents;
+    public HashSet<String> disabledComponents;
+    public HashSet<String> enabledComponents;
+    public HashSet<String> protectedComponents;
+    public HashSet<String> visibleComponents;
 
     public PackageUserState() {
         installed = true;
@@ -55,5 +57,9 @@ public class PackageUserState {
         enabledComponents = o.enabledComponents != null
                 ? new ArraySet<String>(o.enabledComponents) : null;
         blockUninstall = o.blockUninstall;
+        protectedComponents = o.protectedComponents != null
+                ? new HashSet<String>(o.protectedComponents) : null;
+        visibleComponents = o.visibleComponents != null
+                ? new HashSet<String>(o.visibleComponents) : null;
     }
 }
