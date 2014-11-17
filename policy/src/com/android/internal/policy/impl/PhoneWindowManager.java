@@ -4818,7 +4818,35 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 result &= ~ACTION_PASS_TO_USER;
                 isWakeKey = false; // wake-up will be handled separately
                 if (down) {
-                    interceptPowerKeyDown(event, interactive);
+                    boolean panic = mImmersiveModeConfirmation.onPowerKeyDown(interactive,
+                            event.getDownTime(), isImmersiveMode(mLastSystemUiFlags));
+                    if (panic && !PolicyControl.isImmersiveFiltersActive()) {
+                        mHandler.post(mRequestTransientNav);
+                    }
+                    if (interactive && !mPowerKeyTriggered
+                            && (event.getFlags() & KeyEvent.FLAG_FALLBACK) == 0) {
+                        mPowerKeyTriggered = true;
+                        mPowerKeyTime = event.getDownTime();
+                        interceptScreenshotChord();
+                    }
+
+                    TelecomManager telecomManager = getTelecommService();
+                    boolean hungUp = false;
+                    if (telecomManager != null) {
+                        if (telecomManager.isRinging()) {
+                            // Pressing Power while there's a ringing incoming
+                            // call should silence the ringer.
+                            telecomManager.silenceRinger();
+                        } else if ((mIncallPowerBehavior
+                                & Settings.Secure.INCALL_POWER_BUTTON_BEHAVIOR_HANGUP) != 0
+                                && telecomManager.isInCall() && interactive) {
+                            // Otherwise, if "Power button ends call" is enabled,
+                            // the Power button will hang up any current active call.
+                            hungUp = telecomManager.endCall();
+                        }
+                    }
+                    interceptPowerKeyDown(!interactive || hungUp
+                            || mVolumeDownKeyTriggered || mVolumeUpKeyTriggered);
                 } else {
                     interceptPowerKeyUp(event, interactive, canceled);
                 }
