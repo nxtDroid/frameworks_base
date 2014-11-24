@@ -17,6 +17,7 @@
 package android.app;
 
 import android.annotation.SdkConstant;
+import android.app.Notification;
 import android.app.Notification.Builder;
 import android.content.ComponentName;
 import android.content.Context;
@@ -267,12 +268,12 @@ public class NotificationManager
     /**
      * @hide
      */
-    public boolean isSystemConditionProviderEnabled(String path) {
+    public int getShowNotificationForPackageOnKeyguard(String pkg, int uid) {
         INotificationManager service = getService();
         try {
-            return service.isSystemConditionProviderEnabled(path);
+            return getService().getShowNotificationForPackageOnKeyguard(pkg, uid);
         } catch (RemoteException e) {
-            return false;
+            return Notification.SHOW_ALL_NOTI_ON_KEYGUARD;
         }
     }
 
