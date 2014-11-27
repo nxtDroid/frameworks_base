@@ -5170,7 +5170,7 @@
     <string name="stk_cc_ss_to_ss">SS request is modified to new SS request.</string>
 
     <!-- kill app long press back -->
-    <string name="app_killed_message">Application killed.</string>
+    <string name="app_killed_message">Application killed</string>
 
     <!-- Title of dialog to confirm rebooting. -->
     <string name="reboot_title">Reboot</string>
