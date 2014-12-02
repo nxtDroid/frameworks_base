@@ -47,6 +47,7 @@ import android.view.animation.Interpolator;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
+import com.android.internal.widget.LockPatternUtils;
 import com.android.keyguard.KeyguardStatusView;
 import com.android.systemui.EventLogTags;
 import com.android.systemui.EventLogConstants;
@@ -184,9 +185,11 @@ public class NotificationPanelView extends PanelView implements
     private int mQsFalsingThreshold;
 
     private Handler mHandler = new Handler();
+    private LockPatternUtils mLockPatternUtils;
     private SettingsObserver mSettingsObserver;
 
     private boolean mOneFingerQuickSettingsIntercept;
+    private boolean mStatusBarLockedOnSecureKeyguard;
     private boolean mDoubleTapToSleepEnabled;
     private int mStatusBarHeaderHeight;
     private GestureDetector mDoubleTapGesture;
@@ -194,6 +197,7 @@ public class NotificationPanelView extends PanelView implements
     public NotificationPanelView(Context context, AttributeSet attrs) {
         super(context, attrs);
         mSettingsObserver = new SettingsObserver(mHandler);
+        mLockPatternUtils = new LockPatternUtils(mContext);
         mDoubleTapGesture = new GestureDetector(mContext, new GestureDetector.SimpleOnGestureListener() {
             @Override
             public boolean onDoubleTap(MotionEvent e) {
@@ -683,9 +687,11 @@ public class NotificationPanelView extends PanelView implements
         if (mOnlyAffordanceInThisMotion) {
             return true;
         }
+        boolean isQSEventBlocked = mLockPatternUtils.isSecure()
+                && mStatusBarLockedOnSecureKeyguard && mKeyguardShowing;
         if (event.getActionMasked() == MotionEvent.ACTION_DOWN && getExpandedFraction() == 1f
                 && mStatusBar.getBarState() != StatusBarState.KEYGUARD && !mQsExpanded
-                && mQsExpansionEnabled) {
+                && mQsExpansionEnabled && !isQSEventBlocked) {
 
             // Down in the empty area while fully expanded - go to QS.
             mQsTracking = true;
@@ -695,7 +701,7 @@ public class NotificationPanelView extends PanelView implements
             mInitialTouchY = event.getX();
             mInitialTouchX = event.getY();
         }
-        if (mExpandedHeight != 0) {
+        if (mExpandedHeight != 0 && !isQSEventBlocked) {
             handleQsDown(event);
         }
         if (!mQsExpandImmediate && mQsTracking) {
@@ -719,8 +725,9 @@ public class NotificationPanelView extends PanelView implements
                 && event.getActionMasked() == MotionEvent.ACTION_DOWN
                 && shouldQuickSettingsIntercept(event.getX(), event.getY(), -1, false);
         if ((twoFingerQsEvent || oneFingerQsOverride)
-                && event.getY(event.getActionIndex()) < mStatusBarMinHeight) {
-            mQsExpandImmediate = true;
+                && event.getY(event.getActionIndex()) < mStatusBarMinHeight
+                && !isQSEventBlocked) {
+            mTwoFingerQsExpand = true;
             requestPanelHeightUpdate();
 
             // Normally, we start listening when the panel is expanded, but here we need to start
@@ -2011,6 +2018,9 @@ public class NotificationPanelView extends PanelView implements
                     Settings.System.STATUS_BAR_QUICK_QS_PULLDOWN), false, this);
             resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.DOUBLE_TAP_SLEEP_GESTURE), false, this);
+            resolver.registerContentObserver(Settings.Secure.getUriFor(
+                    Settings.Secure.STATUS_BAR_LOCKED_ON_SECURE_KEYGUARD),
+                    false, this, UserHandle.USER_ALL);
             update();
         }
 
@@ -2035,6 +2045,9 @@ public class NotificationPanelView extends PanelView implements
                     resolver, Settings.System.STATUS_BAR_QUICK_QS_PULLDOWN, 0) == 1;
             mDoubleTapToSleepEnabled = Settings.System.getInt(
                     resolver, Settings.System.DOUBLE_TAP_SLEEP_GESTURE, 0) == 1;
+            mStatusBarLockedOnSecureKeyguard = Settings.Secure.getIntForUser(
+                    resolver, Settings.Secure.STATUS_BAR_LOCKED_ON_SECURE_KEYGUARD, 1,
+                    UserHandle.USER_CURRENT) == 1;
         }
     }
 }
