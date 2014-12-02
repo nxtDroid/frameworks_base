@@ -1792,6 +1792,9 @@ final class ActivityStack {
                     // Do over!
                     mStackSupervisor.scheduleResumeTopActivities();
                 }
+                if (next == mLastScreenshotActivity) {
+                    invalidateLastScreenshot();
+                }
                 if (mStackSupervisor.reportResumedActivityLocked(next)) {
                     mNoAnimActivities.clear();
                     if (DEBUG_STACK) mStackSupervisor.validateTopActivitiesLocked();
