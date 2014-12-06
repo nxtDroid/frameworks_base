@@ -93,6 +93,21 @@ public class PasswordTextView extends View {
     private Interpolator mFastOutSlowInInterpolator;
     private boolean mShowPassword;
 
+    public interface OnTextChangedListener {
+        void onTextChanged();
+    }
+    private OnTextChangedListener mOnTextChangedListener = null;
+
+    public void setOnTextChangedListener(OnTextChangedListener onTextChangedListener) {
+        mOnTextChangedListener = onTextChangedListener;
+    }
+
+    private void textChanged() {
+        if (mOnTextChangedListener != null) {
+            mOnTextChangedListener.onTextChanged();
+        }
+    }
+
     public PasswordTextView(Context context) {
         this(context, null);
     }
@@ -202,6 +217,7 @@ public class PasswordTextView extends View {
                 previousState.swapToDotWhenAppearFinished();
             }
         }
+        textChanged();
         userActivity();
         sendAccessibilityEventTypeViewTextChanged(textbefore, textbefore.length(), 0, 1);
     }
@@ -218,6 +234,7 @@ public class PasswordTextView extends View {
             CharState charState = mTextChars.get(length - 1);
             charState.startRemoveAnimation(0, 0);
         }
+        textChanged();
         userActivity();
         sendAccessibilityEventTypeViewTextChanged(textbefore, textbefore.length() - 1, 1, 0);
     }
@@ -267,71 +284,7 @@ public class PasswordTextView extends View {
         if (!animated) {
             mTextChars.clear();
         }
-        sendAccessibilityEventTypeViewTextChanged(textbefore, 0, textbefore.length(), 0);
-    }
-
-    void sendAccessibilityEventTypeViewTextChanged(String beforeText, int fromIndex,
-                                                   int removedCount, int addedCount) {
-        if (AccessibilityManager.getInstance(mContext).isEnabled() &&
-                (isFocused() || isSelected() && isShown())) {
-            if (!shouldSpeakPasswordsForAccessibility()) {
-                beforeText = null;
-            }
-            AccessibilityEvent event =
-                    AccessibilityEvent.obtain(AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED);
-            event.setFromIndex(fromIndex);
-            event.setRemovedCount(removedCount);
-            event.setAddedCount(addedCount);
-            event.setBeforeText(beforeText);
-            event.setPassword(true);
-            sendAccessibilityEventUnchecked(event);
-        }
-    }
-
-    @Override
-    public void onInitializeAccessibilityEvent(AccessibilityEvent event) {
-        super.onInitializeAccessibilityEvent(event);
-
-        event.setClassName(PasswordTextView.class.getName());
-        event.setPassword(true);
-    }
-
-    @Override
-    public void onPopulateAccessibilityEvent(AccessibilityEvent event) {
-        super.onPopulateAccessibilityEvent(event);
-
-        if (shouldSpeakPasswordsForAccessibility()) {
-            final CharSequence text = mText;
-            if (!TextUtils.isEmpty(text)) {
-                event.getText().add(text);
-            }
-        }
-    }
-
-    @Override
-    public void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info) {
-        super.onInitializeAccessibilityNodeInfo(info);
-
-        info.setClassName(PasswordTextView.class.getName());
-        info.setPassword(true);
-
-        if (shouldSpeakPasswordsForAccessibility()) {
-            info.setText(mText);
-        }
-
-        info.setEditable(true);
-
-        info.setInputType(InputType.TYPE_NUMBER_VARIATION_PASSWORD);
-    }
-
-    /**
-     * @return true if the user has explicitly allowed accessibility services
-     * to speak passwords.
-     */
-    private boolean shouldSpeakPasswordsForAccessibility() {
-        return (Settings.Secure.getIntForUser(mContext.getContentResolver(),
-                Settings.Secure.ACCESSIBILITY_SPEAK_PASSWORD, 0,
-                UserHandle.USER_CURRENT_OR_SELF) == 1);
+        textChanged();
     }
 
     private class CharState {
