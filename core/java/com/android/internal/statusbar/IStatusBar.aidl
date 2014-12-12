@@ -42,6 +42,7 @@ oneway interface IStatusBar
     void toggleRecentApps();
     void preloadRecentApps();
     void cancelPreloadRecentApps();
-    void showScreenPinningRequest();
+    void hideHeadsUpCandidate(String packageName);
+    void scheduleHeadsUpClose();
 }
 
