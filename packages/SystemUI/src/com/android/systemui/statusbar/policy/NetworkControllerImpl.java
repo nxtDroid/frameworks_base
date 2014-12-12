@@ -549,17 +549,146 @@ public class NetworkControllerImpl extends BroadcastReceiver
         mWifiSignalController.notifyListeners();
     }
 
-    /**
-     * Notifies listeners of changes in state of to the NetworkController, but
-     * does not notify for any info on SignalControllers, for that call
-     * notifyAllListeners.
-     */
-    private void notifyListeners() {
-        int length = mSignalClusters.size();
-        for (int i = 0; i < length; i++) {
-            mSignalClusters.get(i).setIsAirplaneMode(mAirplaneMode, TelephonyIcons.FLIGHT_MODE_ICON,
-                    R.string.accessibility_airplane_mode);
-            mSignalClusters.get(i).setNoSims(mHasNoSims);
+    private final void updateDataNetType() {
+        int inetCondition;
+        mDataTypeIconId = mQSDataTypeIconId = 0;
+        if (mIsWimaxEnabled && mWimaxConnected) {
+            // wimax is a special 4g network not handled by telephony
+            inetCondition = inetConditionForNetwork(ConnectivityManager.TYPE_WIMAX);
+            mDataIconList = TelephonyIcons.DATA_4G[inetCondition];
+            mDataTypeIconId = R.drawable.stat_sys_data_fully_connected_4g;
+            mQSDataTypeIconId = TelephonyIcons.QS_DATA_4G[inetCondition];
+            mContentDescriptionDataType = mContext.getString(
+                    R.string.accessibility_data_connection_4g);
+        } else {
+            inetCondition = inetConditionForNetwork(ConnectivityManager.TYPE_MOBILE);
+            final boolean showDataTypeIcon = (inetCondition > 0);
+            switch (mDataNetType) {
+                case TelephonyManager.NETWORK_TYPE_UNKNOWN:
+                    if (!mShowAtLeastThreeGees) {
+                        mDataIconList = TelephonyIcons.DATA_G[inetCondition];
+                        mContentDescriptionDataType = "";
+                        break;
+                    } else {
+                        // fall through
+                    }
+                case TelephonyManager.NETWORK_TYPE_EDGE:
+                    if (!mShowAtLeastThreeGees) {
+                        mDataIconList = TelephonyIcons.DATA_E[inetCondition];
+                        mDataTypeIconId = showDataTypeIcon ?
+                                R.drawable.stat_sys_data_fully_connected_e : 0;
+                        mQSDataTypeIconId = TelephonyIcons.QS_DATA_E[inetCondition];
+                        mContentDescriptionDataType = mContext.getString(
+                                R.string.accessibility_data_connection_edge);
+                        break;
+                    } else {
+                        // fall through
+                    }
+                case TelephonyManager.NETWORK_TYPE_UMTS:
+                    mDataIconList = TelephonyIcons.DATA_3G[inetCondition];
+                    mDataTypeIconId = showDataTypeIcon ?
+                                R.drawable.stat_sys_data_fully_connected_3g : 0;
+                    mQSDataTypeIconId = TelephonyIcons.QS_DATA_3G[inetCondition];
+                    mContentDescriptionDataType = mContext.getString(
+                            R.string.accessibility_data_connection_3g);
+                    break;
+                case TelephonyManager.NETWORK_TYPE_HSDPA:
+                case TelephonyManager.NETWORK_TYPE_HSUPA:
+                case TelephonyManager.NETWORK_TYPE_HSPA:
+                    if (mHspaDataDistinguishable) {
+                        mDataIconList = TelephonyIcons.DATA_H[inetCondition];
+                        mDataTypeIconId = showDataTypeIcon ?
+                                R.drawable.stat_sys_data_fully_connected_h : 0;
+                        mQSDataTypeIconId = TelephonyIcons.QS_DATA_H[inetCondition];
+                        mContentDescriptionDataType = mContext.getString(
+                                R.string.accessibility_data_connection_3_5g);
+                    } else {
+                        mDataIconList = TelephonyIcons.DATA_3G[inetCondition];
+                        mDataTypeIconId = showDataTypeIcon ?
+                                R.drawable.stat_sys_data_fully_connected_3g : 0;
+                        mQSDataTypeIconId = TelephonyIcons.QS_DATA_3G[inetCondition];
+                        mContentDescriptionDataType = mContext.getString(
+                                R.string.accessibility_data_connection_3g);
+                    }
+                    break;
+                case TelephonyManager.NETWORK_TYPE_HSPAP:
+                    mDataIconList = TelephonyIcons.DATA_HP[mInetCondition];
+                    mDataTypeIconId = R.drawable.stat_sys_data_fully_connected_hp;
+                    mQSDataTypeIconId = TelephonyIcons.QS_DATA_HP[mInetCondition];
+                    mContentDescriptionDataType = mContext.getString(
+                            R.string.accessibility_data_connection_HP);
+                    break;
+                case TelephonyManager.NETWORK_TYPE_CDMA:
+                    if (!mShowAtLeastThreeGees) {
+                        // display 1xRTT for IS95A/B
+                        mDataIconList = TelephonyIcons.DATA_1X[inetCondition];
+                        mDataTypeIconId = showDataTypeIcon ?
+                                R.drawable.stat_sys_data_fully_connected_1x : 0;
+                        mQSDataTypeIconId = TelephonyIcons.QS_DATA_1X[inetCondition];
+                        mContentDescriptionDataType = mContext.getString(
+                                R.string.accessibility_data_connection_cdma);
+                        break;
+                    } else {
+                        // fall through
+                    }
+                case TelephonyManager.NETWORK_TYPE_1xRTT:
+                    if (!mShowAtLeastThreeGees) {
+                        mDataIconList = TelephonyIcons.DATA_1X[inetCondition];
+                        mDataTypeIconId = showDataTypeIcon ?
+                                R.drawable.stat_sys_data_fully_connected_1x : 0;
+                        mQSDataTypeIconId = TelephonyIcons.QS_DATA_1X[inetCondition];
+                        mContentDescriptionDataType = mContext.getString(
+                                R.string.accessibility_data_connection_cdma);
+                        break;
+                    } else {
+                        // fall through
+                    }
+                case TelephonyManager.NETWORK_TYPE_EVDO_0: //fall through
+                case TelephonyManager.NETWORK_TYPE_EVDO_A:
+                case TelephonyManager.NETWORK_TYPE_EVDO_B:
+                case TelephonyManager.NETWORK_TYPE_EHRPD:
+                    mDataIconList = TelephonyIcons.DATA_3G[inetCondition];
+                    mDataTypeIconId = showDataTypeIcon ?
+                                R.drawable.stat_sys_data_fully_connected_3g : 0;
+                    mQSDataTypeIconId = TelephonyIcons.QS_DATA_3G[inetCondition];
+                    mContentDescriptionDataType = mContext.getString(
+                            R.string.accessibility_data_connection_3g);
+                    break;
+                case TelephonyManager.NETWORK_TYPE_LTE:
+                    boolean show4GforLTE = mContext.getResources().getBoolean(R.bool.config_show4GForLTE);
+                    if (show4GforLTE) {
+                        mDataIconList = TelephonyIcons.DATA_4G[inetCondition];
+                        mDataTypeIconId = showDataTypeIcon ?
+                                R.drawable.stat_sys_data_fully_connected_4g : 0;
+                        mQSDataTypeIconId = TelephonyIcons.QS_DATA_4G[inetCondition];
+                        mContentDescriptionDataType = mContext.getString(
+                                R.string.accessibility_data_connection_4g);
+                    } else {
+                        mDataIconList = TelephonyIcons.DATA_LTE[inetCondition];
+                        mDataTypeIconId = showDataTypeIcon ? TelephonyIcons.ICON_LTE : 0;
+                        mQSDataTypeIconId = TelephonyIcons.QS_DATA_LTE[inetCondition];
+                        mContentDescriptionDataType = mContext.getString(
+                                R.string.accessibility_data_connection_lte);
+                    }
+                    break;
+                default:
+                    if (!mShowAtLeastThreeGees) {
+                        mDataIconList = TelephonyIcons.DATA_G[inetCondition];
+                        mDataTypeIconId = showDataTypeIcon ?
+                                R.drawable.stat_sys_data_fully_connected_g : 0;
+                        mQSDataTypeIconId = TelephonyIcons.QS_DATA_G[inetCondition];
+                        mContentDescriptionDataType = mContext.getString(
+                                R.string.accessibility_data_connection_gprs);
+                    } else {
+                        mDataIconList = TelephonyIcons.DATA_3G[inetCondition];
+                        mDataTypeIconId = showDataTypeIcon ?
+                                R.drawable.stat_sys_data_fully_connected_3g : 0;
+                        mQSDataTypeIconId = TelephonyIcons.QS_DATA_3G[inetCondition];
+                        mContentDescriptionDataType = mContext.getString(
+                                R.string.accessibility_data_connection_3g);
+                    }
+                    break;
+            }
         }
         int signalsChangedLength = mSignalsChangedCallbacks.size();
         for (int i = 0; i < signalsChangedLength; i++) {
