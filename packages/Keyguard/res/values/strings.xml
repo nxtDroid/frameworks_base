@@ -435,5 +435,6 @@
 
     <!-- Content description of the switch input method button for accessibility (not shown on the screen). [CHAR LIMIT=NONE] -->
     <string name="accessibility_ime_switch_button" msgid="5032926134740456424">Switch input method button.</string>
-
+    <!-- Description of the Random button in a KeyboardView. [CHAR LIMIT=NONE] -->
+    <string name="keyboardview_keycode_random">Reload random buttons</string>
 </resources>
