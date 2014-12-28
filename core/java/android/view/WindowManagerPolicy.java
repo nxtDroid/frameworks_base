@@ -868,9 +868,7 @@ public interface WindowManagerPolicy {
      * be correct.
      *
      * @param attrs The LayoutParams of the window.
-     * @param outContentInsets The areas covered by system windows, expressed as positive insets.
-     * @param outStableInsets The areas covered by stable system windows irrespective of their
-     *                        current visibility. Expressed as positive insets.
+     * @param contentInset The areas covered by system windows, expressed as positive insets
      *
      */
     public void getInsetHintLw(WindowManager.LayoutParams attrs, Rect outContentInsets,

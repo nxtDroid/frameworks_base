@@ -457,8 +457,8 @@ public class PackageManagerService extends IPackageManager.Stub {
 
     // Packages whose data we have transfered into another package, thus
     // should no longer exist.
-    final ArraySet<String> mTransferedPackages = new ArraySet<String>();
-    
+    final HashSet<String> mTransferedPackages = new HashSet<String>();
+
     // Broadcast actions that are only available to the system.
     final ArraySet<String> mProtectedBroadcasts = new ArraySet<String>();
 
@@ -588,6 +588,9 @@ public class PackageManagerService extends IPackageManager.Stub {
 
     // Stores a list of users whose package restrictions file needs to be updated
     private ArraySet<Integer> mDirtyUsers = new ArraySet<Integer>();
+
+    WindowManager mWindowManager;
+    private final WindowManagerPolicy mPolicy; // to set packageName
 
     WindowManager mWindowManager;
     private final WindowManagerPolicy mPolicy; // to set packageName
