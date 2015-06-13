@@ -69,7 +69,8 @@ public class AudioManager {
     private final boolean mUseFixedVolume;
     private final Binder mToken = new Binder();
     private static String TAG = "AudioManager";
-    AudioPortEventHandler mAudioPortEventHandler;
+   /** AudioPortEventHandler mAudioPortEventHandler; */
+    private static final AudioPortEventHandler sAudioPortEventHandler = new AudioPortEventHandler();
     private final WindowManager mWindowManager;
 
     /**
